@@ -1,0 +1,29 @@
+{
+  "name": "icp-chart-e2e-test",
+  "version": "0.0.1",
+  "description": "E2E test template for ICP chart",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/viane/icp-chart-e2e-test.git"
+  },
+  "keywords": [
+    "e2e"
+  ],
+  "author": "xiaoyu zhou",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/viane/icp-chart-e2e-test/issues"
+  },
+  "homepage": "https://github.com/viane/icp-chart-e2e-test#readme",
+  "dependencies": {
+    "chai": "^4.2.0",
+    "dotenv": "^6.2.0",
+    "mocha": "^6.0.1",
+    "mocha-generators": "^2.0.0",
+    "nightmare": "^3.0.1"
+  }
+}
