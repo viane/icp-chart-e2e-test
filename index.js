@@ -28,9 +28,72 @@ const nightmare = new Nightmare({
   // webPreferences: {
   //   partition: 'persist:nightmare'
   // },
+  waitTimeout: 60000,
+  loadTimeout: 60000,
+  executionTimeout: 20000,
   width: 1600,
-  height: 900
+  height: 900,
+  pollInterval: 1000,
+  dock: true,
+  openDevTools: {
+    mode: 'detach'
+  }
 })
+
+const serarch_chart_in_catalog = () => {
+        return nightmare
+              // search ibm-zos-cloud-broker
+        .wait('#search-1', 5000)
+        .type('#search-1', 'ibm-zos-cloud-broker')
+        // wait broker tile show up
+            .wait('#resourceLink_ibm-zos-cloud-broker', 1000)
+          .click('#resourceLink_ibm-zos-cloud-broker')
+}
+
+const check_specific_version_chart = () => {
+        return nightmare
+          .evaluate(() => document.URL)
+          .then(loginRedirctURL => {
+            expect(loginRedirctURL).to.equal(`${ICP_URL}/catalog/catalogdetails/local-charts/ibm-zos-cloud-broker/${CHART_VERSION}`)
+          })
+}
+
+const open_chart_install_config_pane = ()=>{
+        return nightmare
+        .wait('#CatalogDetails #configureButton', 5000)
+        .click('#configureButton')
+}
+
+const fill_release_installation_information = ()=>{
+        return nightmare
+        .type('#selectedReleaseName',RELEASE_NAME)
+        .select('#selectedNamespace',TARGET_NAMESPACE)
+        .click('#license')
+        .type('#zosmf\\.host', ZOSMF_HOST)
+        .type('#zosmf\\.domain', ZOSMF_DOMAIN)
+        .type('#couchdb\\.databasePVC\\.existingClaimName', PVC)
+        .click('#catalogservicedetailbutton')
+}
+
+const verify_release_status_pop_up = ()=>{
+          return nightmare
+        .wait('#DeploymentSuccessfulModal', 30000) //wait 30 seconds
+        .evaluate(() => document.querySelector('.deploymentModal').textContent)
+        .then(successText => {
+          expect(successText).to.equal('Installation started. For progress view your Helm release.')
+        })
+}
+
+const verify_release_information = () =>{
+        return nightmare
+        .click('.deploymentModalButton button')
+        .wait(10000)
+        .wait('.detail-main-content__container', 30000)
+        .evaluate(() => document.querySelector('#StatusText').textContent)
+        .then(successText => {
+          expect(successText).to.equal('Deployed')
+        })
+}
 
 describe('test deploy pev065 broker', () => {
 
@@ -71,59 +134,22 @@ describe('test deploy pev065 broker', () => {
         expect(loginRedirctURL).to.equal(`${ICP_URL}/catalog/`)
       })
       .then(function() {
-        //since Nightmare has an internal `.then()`, return the instance returned by the final call in the chain
-        return nightmare
-              // search ibm-zos-cloud-broker
-        .wait('#search-1', 5000)
-        .type('#search-1', 'ibm-zos-cloud-broker')
-        // wait broker tile show up
-            .wait('#resourceLink_ibm-zos-cloud-broker', 1000)
-          .click('#resourceLink_ibm-zos-cloud-broker')
+        return serarch_chart_in_catalog()
       })
       .then(function() {
-        // check specific version of Chart is available
-        return nightmare
-          .evaluate(() => document.URL)
-          .then(loginRedirctURL => {
-            expect(loginRedirctURL).to.equal(`${ICP_URL}/catalog/catalogdetails/local-charts/ibm-zos-cloud-broker/${CHART_VERSION}`)
-          })
+        return check_specific_version_chart()
       })
       .then(function() {
-        // check specific version of Chart is available
-        return nightmare
-        .wait('#CatalogDetails #configureButton', 5000)
-        .click('#configureButton')
+        return open_chart_install_config_pane()
       })
       .then(function() {
-        // fill release infomation
-        return nightmare
-        .type('#selectedReleaseName',RELEASE_NAME)
-        .select('#selectedNamespace',TARGET_NAMESPACE)
-        .click('#license')
-        .type('#zosmf\\.host', ZOSMF_HOST)
-        .type('#zosmf\\.domain', ZOSMF_DOMAIN)
-        .type('#couchdb\\.databasePVC\\.existingClaimName', PVC)
-        .click('#catalogservicedetailbutton')
+        return fill_release_installation_information()
       })
       .then(function() {
-        // check deployment status modal
-        return nightmare
-        .wait('#DeploymentSuccessfulModal', 30000) //wait 30 seconds
-        .evaluate(() => document.querySelector('.deploymentModal').textContent)
-        .then(successText => {
-          expect(successText).to.equal('Installation started. For progress view your Helm release.')
-        })
+      return verify_release_status_pop_up()
       })
       .then(()=>{
-        // check Helm Release info
-        return nightmare
-        .click('.deploymentModalButton button')
-        .wait(10000)
-        .wait('.detail-main-content__container', 30000)
-        .evaluate(() => document.querySelector('#StatusText').textContent)
-        .then(successText => {
-          expect(successText).to.equal('Deployed')
-        })
+      return verify_release_information()
       })
       // End test
       .then(()=>{
